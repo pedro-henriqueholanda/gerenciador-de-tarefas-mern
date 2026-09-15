@@ -48,10 +48,20 @@ const getTransaction = async (req, res) => {
 
 const updateTransaction = async (req, res) => {
     try {
-        const transaction = await Transaction.findById(req.params.id);
+        console.log("ID recebido:", req.params.id);
+        console.log("Usuário autenticado:", req.userId);
+
+        const transaction = await Transaction.findOne({
+            _id: req.params.id,
+            user: req.userId
+        });
+
+        console.log("Transação encontrada:", transaction);
 
         if (!transaction) {
-            return res.status(404).json({ message: "Transação não encontrada" });
+            return res.status(404).json({
+                message: "Transação não encontrada"
+            });
         }
 
         transaction.type = req.body.type;
@@ -64,8 +74,10 @@ const updateTransaction = async (req, res) => {
 
         res.json(transaction);
     } catch (error) {
-        console.error(error);
-        res.status(400).json({ message: "Erro ao atualizar transação" });
+        console.error("ERRO NO PUT:", error);
+        res.status(400).json({
+            message: "Erro ao atualizar transação"
+        });
     }
 };
 
