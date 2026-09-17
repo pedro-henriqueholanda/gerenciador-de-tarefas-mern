@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Transaction = require("../models/Transaction");
 
-const createTransaction = async (req, res) => {
+const createTransaction = async (req, res, next) => {
     try {
         const transaction = await Transaction.create({
             ...req.body,
@@ -10,7 +10,7 @@ const createTransaction = async (req, res) => {
 
         res.status(201).json(transaction);
     } catch (error) {
-        res.status(400).json({ message: "Erro ao criar transação" });
+        next(error); // Passa o erro para o middleware de tratamento de erros
     }
 };
 
