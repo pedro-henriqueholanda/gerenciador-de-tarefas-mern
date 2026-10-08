@@ -5,6 +5,7 @@ require("dotenv").config();
 
 const authRoutes = require("./routes/authRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
+const errorMiddleware = require("./middlewares/errorMiddleware");
 
 const app = express();
 
@@ -19,6 +20,8 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
+
+app.use(errorMiddleware);
 
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
