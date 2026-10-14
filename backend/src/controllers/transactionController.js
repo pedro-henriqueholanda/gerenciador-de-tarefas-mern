@@ -25,9 +25,17 @@ const getTransactions = async (req, res, next) => {
     }
 };
 
+
+
 const getTransaction = async (req, res, next) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).json({
+        message: "ID de transação inválido"
+    });
+}
+        
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ message: "ID inválido" });
         }
 
@@ -48,6 +56,12 @@ const getTransaction = async (req, res, next) => {
 
 const updateTransaction = async (req, res, next) => {
     try {
+       if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).json({
+        message: "ID de transação inválido"
+    });
+}
+       
         const transaction = await Transaction.findOneAndUpdate(
             {
                 _id: req.params.id,
@@ -80,6 +94,13 @@ const updateTransaction = async (req, res, next) => {
 
 const deleteTransaction = async (req, res, next) => {
     try {
+
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).json({
+        message: "ID de transação inválido"
+    });
+}
+
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ message: "ID inválido" });
         }
