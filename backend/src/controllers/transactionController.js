@@ -46,17 +46,25 @@ const getTransaction = async (req, res) => {
     }
 };
 
-const updateTransaction = async (req, res) => {
+const updateTransaction = async (req, res, next) => {
     try {
-        console.log("ID recebido:", req.params.id);
-        console.log("Usuário autenticado:", req.userId);
-
-        const transaction = await Transaction.findOne({
-            _id: req.params.id,
-            user: req.userId
-        });
-
-        console.log("Transação encontrada:", transaction);
+        const transaction = await Transaction.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                user: req.userId
+            },
+            {
+                type: req.body.type,
+                value: req.body.value,
+                category: req.body.category,
+                description: req.body.description,
+                date: req.body.date
+            },
+            {
+                new: true,
+                runValidators: true
+            }
+        );
 
         if (!transaction) {
             return res.status(404).json({
@@ -64,20 +72,9 @@ const updateTransaction = async (req, res) => {
             });
         }
 
-        transaction.type = req.body.type;
-        transaction.value = req.body.value;
-        transaction.category = req.body.category;
-        transaction.description = req.body.description;
-        transaction.date = req.body.date;
-
-        await transaction.save();
-
         res.json(transaction);
     } catch (error) {
-        console.error("ERRO NO PUT:", error);
-        res.status(400).json({
-            message: "Erro ao atualizar transação"
-        });
+        next(error);
     }
 };
 
