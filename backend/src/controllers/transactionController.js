@@ -14,18 +14,18 @@ const createTransaction = async (req, res, next) => {
     }
 };
 
-const getTransactions = async (req, res) => {
+const getTransactions = async (req, res, next) => {
     try {
         const transactions = await Transaction.find({ user: req.userId })
             .sort({ date: -1 });
 
         res.json(transactions);
     } catch (error) {
-        res.status(500).json({ message: "Erro ao buscar transações" });
+        next(error);
     }
 };
 
-const getTransaction = async (req, res) => {
+const getTransaction = async (req, res, next) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ message: "ID inválido" });
@@ -42,7 +42,7 @@ const getTransaction = async (req, res) => {
 
         res.json(transaction);
     } catch (error) {
-        res.status(500).json({ message: "Erro ao buscar transação" });
+        next(error);
     }
 };
 
@@ -78,7 +78,7 @@ const updateTransaction = async (req, res, next) => {
     }
 };
 
-const deleteTransaction = async (req, res) => {
+const deleteTransaction = async (req, res, next) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ message: "ID inválido" });
@@ -95,8 +95,7 @@ const deleteTransaction = async (req, res) => {
 
         res.json({ message: "Transação excluída com sucesso" });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Erro ao excluir transação" });
+        next(error);
     }
 };
 
