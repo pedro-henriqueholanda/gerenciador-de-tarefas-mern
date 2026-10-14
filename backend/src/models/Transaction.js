@@ -12,23 +12,33 @@ const transactionSchema = new mongoose.Schema({
         required: true
     },
     value: {
-        type: Number,
+        type: mongoose.Schema.Types.Decimal128,
         required: true,
-        min: 0
-    },
+        validate: {
+                validator: function (value) {
+                    return parseFloat(value.toString()) > 0;
+                },
+                message: "O valor deve ser maior que zero"
+            }
+        },
     category: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        maxlength: 50
     },
     description: {
         type: String,
-        trim: true
+        trim: true,
+        maxlength: 100
     },
     date: {
         type: Date,
         required: true
     }
-});
+}, {
+    timestamps: true
+    }
+);
 
 module.exports = mongoose.model("Transaction", transactionSchema);
