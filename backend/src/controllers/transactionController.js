@@ -16,8 +16,9 @@ const createTransaction = async (req, res, next) => {
 
 const getTransactions = async (req, res, next) => {
     try {
-        const transactions = await Transaction.find({ user: req.userId })
-            .sort({ date: -1 });
+        const transactions = await Transaction.find({
+            user: req.userId
+        }).sort({ date: -1 });
 
         res.json(transactions);
     } catch (error) {
@@ -25,18 +26,12 @@ const getTransactions = async (req, res, next) => {
     }
 };
 
-
-
 const getTransaction = async (req, res, next) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    return res.status(400).json({
-        message: "ID de transação inválido"
-    });
-}
-        
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ message: "ID inválido" });
+            return res.status(400).json({
+                message: "ID de transação inválido"
+            });
         }
 
         const transaction = await Transaction.findOne({
@@ -45,7 +40,9 @@ const getTransaction = async (req, res, next) => {
         });
 
         if (!transaction) {
-            return res.status(404).json({ message: "Transação não encontrada" });
+            return res.status(404).json({
+                message: "Transação não encontrada"
+            });
         }
 
         res.json(transaction);
@@ -56,12 +53,12 @@ const getTransaction = async (req, res, next) => {
 
 const updateTransaction = async (req, res, next) => {
     try {
-       if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    return res.status(400).json({
-        message: "ID de transação inválido"
-    });
-}
-       
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({
+                message: "ID de transação inválido"
+            });
+        }
+
         const transaction = await Transaction.findOneAndUpdate(
             {
                 _id: req.params.id,
@@ -94,15 +91,10 @@ const updateTransaction = async (req, res, next) => {
 
 const deleteTransaction = async (req, res, next) => {
     try {
-
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    return res.status(400).json({
-        message: "ID de transação inválido"
-    });
-}
-
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ message: "ID inválido" });
+            return res.status(400).json({
+                message: "ID de transação inválido"
+            });
         }
 
         const transaction = await Transaction.findOneAndDelete({
@@ -111,10 +103,14 @@ const deleteTransaction = async (req, res, next) => {
         });
 
         if (!transaction) {
-            return res.status(404).json({ message: "Transação não encontrada" });
+            return res.status(404).json({
+                message: "Transação não encontrada"
+            });
         }
 
-        res.json({ message: "Transação excluída com sucesso" });
+        res.json({
+            message: "Transação excluída com sucesso"
+        });
     } catch (error) {
         next(error);
     }

@@ -18,8 +18,10 @@ const errorMiddleware = (err, req, res, next) => {
         });
     }
 
-    return res.status(500).json({
-        message: "Erro interno do servidor"
+    const statusCode = err.statusCode || 500;
+
+    return res.status(statusCode).json({
+        message: err.message || "Erro interno do servidor"
     });
 };
 
