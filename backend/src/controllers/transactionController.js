@@ -10,53 +10,34 @@ const createTransaction = async (req, res, next) => {
 
         res.status(201).json(transaction);
     } catch (error) {
-        next(error); // Passa o erro para o middleware de tratamento de erros
+        next(error);
     }
 };
 
-const getTransactions = async (req, res) => {
+const getTransactions = async (req, res, next) => {
     try {
-        const transactions = await Transaction.find({ user: req.userId })
-            .sort({ date: -1 });
+        const transactions = await Transaction.find({
+            user: req.userId
+        }).sort({ date: -1 });
 
         res.json(transactions);
     } catch (error) {
-        res.status(500).json({ message: "Erro ao buscar transações" });
+        next(error);
     }
 };
 
-const getTransaction = async (req, res) => {
+const getTransaction = async (req, res, next) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ message: "ID inválido" });
+            return res.status(400).json({
+                message: "ID de transação inválido"
+            });
         }
 
         const transaction = await Transaction.findOne({
             _id: req.params.id,
             user: req.userId
         });
-
-        if (!transaction) {
-            return res.status(404).json({ message: "Transação não encontrada" });
-        }
-
-        res.json(transaction);
-    } catch (error) {
-        res.status(500).json({ message: "Erro ao buscar transação" });
-    }
-};
-
-const updateTransaction = async (req, res) => {
-    try {
-        console.log("ID recebido:", req.params.id);
-        console.log("Usuário autenticado:", req.userId);
-
-        const transaction = await Transaction.findOne({
-            _id: req.params.id,
-            user: req.userId
-        });
-
-        console.log("Transação encontrada:", transaction);
 
         if (!transaction) {
             return res.status(404).json({
@@ -64,27 +45,56 @@ const updateTransaction = async (req, res) => {
             });
         }
 
-        transaction.type = req.body.type;
-        transaction.value = req.body.value;
-        transaction.category = req.body.category;
-        transaction.description = req.body.description;
-        transaction.date = req.body.date;
-
-        await transaction.save();
-
         res.json(transaction);
     } catch (error) {
-        console.error("ERRO NO PUT:", error);
-        res.status(400).json({
-            message: "Erro ao atualizar transação"
-        });
+        next(error);
     }
 };
 
-const deleteTransaction = async (req, res) => {
+const updateTransaction = async (req, res, next) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ message: "ID inválido" });
+            return res.status(400).json({
+                message: "ID de transação inválido"
+            });
+        }
+
+        const transaction = await Transaction.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                user: req.userId
+            },
+            {
+                type: req.body.type,
+                value: req.body.value,
+                category: req.body.category,
+                description: req.body.description,
+                date: req.body.date
+            },
+            {
+                new: true,
+                runValidators: true
+            }
+        );
+
+        if (!transaction) {
+            return res.status(404).json({
+                message: "Transação não encontrada"
+            });
+        }
+
+        res.json(transaction);
+    } catch (error) {
+        next(error);
+    }
+};
+
+const deleteTransaction = async (req, res, next) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({
+                message: "ID de transação inválido"
+            });
         }
 
         const transaction = await Transaction.findOneAndDelete({
@@ -93,13 +103,16 @@ const deleteTransaction = async (req, res) => {
         });
 
         if (!transaction) {
-            return res.status(404).json({ message: "Transação não encontrada" });
+            return res.status(404).json({
+                message: "Transação não encontrada"
+            });
         }
 
-        res.json({ message: "Transação excluída com sucesso" });
+        res.json({
+            message: "Transação excluída com sucesso"
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Erro ao excluir transação" });
+        next(error);
     }
 };
 

@@ -21,6 +21,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
 
+// Middleware global de tratamento de erros
 app.use(errorMiddleware);
 
 mongoose.connect(process.env.MONGO_URI)
