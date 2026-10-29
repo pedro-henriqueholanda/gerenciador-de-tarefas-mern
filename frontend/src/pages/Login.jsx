@@ -23,7 +23,7 @@ export default function Login() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2>Login</h2>
+      <h2 className="text-3xl font-bold text-green-600">Login</h2>
       {erro && <p style={{ color: "red" }}>{erro}</p>}
       <input type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} required />
       <input type="password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} required />

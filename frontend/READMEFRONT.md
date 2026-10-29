@@ -52,3 +52,36 @@ frontend/
 
 ### Endpoints esperados da API
 Ver seção "Integração com o Backend" para o contrato exato de request/response.
+
+## Planejamento Visual
+
+### Passo 1 — Wireframe (Excalidraw)
+
+Estrutura de componentes planejada antes da geração visual:
+
+![Wireframe do Dashboard](frontend/docs/images/wireframe-gerenciador-transacoes.png)
+
+**Componentes identificados:**
+- **Header** — barra superior fixa com logo e menu do usuário
+- **Sidebar** — menu lateral (Dashboard, Nova Transação, Categorias)
+- **SaldoCard** — resumo do saldo atual
+- **TransactionCard** — item individual da lista (componente reutilizável)
+- **TransactionModal** — formulário de criar/editar (componente reutilizável)
+
+### Passo 2 — Geração de UI com IA
+
+A partir da estrutura definida no wireframe, foram criados 3 prompts para gerar as peças visuais da interface.
+
+**1. Tela completa do Dashboard**
+
+![Dashboard gerado](frontend/docs/images/dashboard.png)
+
+**2. Componente TransactionCard**
+
+![TransactionCard gerado](frontend/docs/images/transactioncard.png)
+
+**3. Modal de criar/editar transação**
+
+![Modal gerado](frontend/docs/images/modal.png)
+
+Os resultados confirmam a estrutura de componentes planejada no wireframe: cards de transação reutilizáveis, modal isolado e layout consistente com header + sidebar.
