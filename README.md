@@ -587,3 +587,64 @@ Consulte o arquivo `LICENSE` presente na raiz do repositório.
 * Executar testes finais de autenticação e CRUD.
 * Finalizar documentação e preparação para apresentação.
 * Avaliar Docker como diferencial de entrega.
+
+
+---
+
+## 🎨 Atividade: Design e Componentização Front-end com IA
+
+Nesta etapa, o frontend recebeu uma interface SPA de gerenciamento de tarefas, com foco em hierarquia visual, responsividade, componentes reutilizáveis e dados simulados.
+
+### Planejamento visual e arquitetura
+
+A tela foi organizada em três regiões:
+
+- **Sidebar:** marca, espaço de trabalho e filtros por todas, pendentes, concluídas e atrasadas.
+- **Header:** campo de busca, ação para criar tarefa, perfil e saída da conta.
+- **Conteúdo principal:** saudação, indicadores de tarefas e lista de cartões.
+
+### Componentes React
+
+| Componente | Responsabilidade |
+| --- | --- |
+| `TaskSidebar` | Navegação e filtros da lista |
+| `TaskHeader` | Busca, criação e ações do usuário |
+| `StatCard` | Indicadores resumidos |
+| `TaskCard` | Exibição e ações de uma tarefa |
+| `TaskFormModal` | Formulário para criar tarefas |
+| `Dashboard` | Estado, filtros e composição da página |
+
+Os componentes recebem dados e callbacks por props. Assim, cada parte visual pode ser mantida e testada isoladamente.
+
+### Dados simulados e renderização
+
+O arquivo `frontend/src/data/tasks.js` fornece sete tarefas fictícias com identificador, título, descrição, responsável, categoria, prazo e status. O Dashboard mantém os dados em `useState`, filtra a coleção e utiliza `.map()` com `key={tarefa.id}` para renderizar cada `TaskCard`.
+
+A criação, conclusão e exclusão de tarefas funcionam localmente durante a demonstração. Os dados são mocks em memória e são reiniciados ao recarregar a página; a integração com a API deverá substituir essa fonte quando o backend de tarefas estiver disponível.
+
+### Prompts utilizados como referência
+
+> **Prompt de planejamento visual (Galileo AI):** Crie um dashboard web responsivo para um gerenciador de tarefas pessoais chamado Taskflow. Use uma interface SaaS limpa, fundo cinza muito claro, cartões brancos, detalhes em roxo suave, tipografia moderna e bastante espaço em branco. Inclua uma sidebar com filtros Todas, Pendentes, Concluídas e Atrasadas; um cabeçalho com busca, botão Nova tarefa e perfil; uma área de boas-vindas; indicadores de total, em andamento, concluídas e atrasadas; e uma lista de tarefas com título, descrição, categoria, prazo, responsável e status. Priorize legibilidade, hierarquia visual e acessibilidade.
+
+> **Prompt de geração de componentes (v0 da Vercel):** Gere componentes React funcionais e reutilizáveis para um dashboard de tarefas, com CSS responsivo. Crie Sidebar, Header, StatCard, TaskCard e modal de criação. Utilize props para dados e callbacks, estados visuais para tarefas pendentes/concluídas, botões acessíveis, busca, filtros e formulário controlado. Não utilize dados Lorem Ipsum: use exemplos realistas em português. Separe responsabilidades e mantenha o componente principal responsável pelo estado da lista.
+
+> **Prompt de revisão com IA:** Revise a implementação React procurando problemas de componentização, acessibilidade, responsividade, uso de keys em listas e atualização imutável do estado. Explique as correções e preserve a integração existente com autenticação e rotas.
+
+Os prompts acima documentam os prompts de referência usados para orientar a implementação com assistência de IA; não constituem comprovante de execução ou exportação nas plataformas Galileo AI, Figma AI ou v0.
+
+### Captura de tela
+
+Após iniciar o frontend, registre uma captura da interface e adicione-a aqui:
+
+```md
+![Dashboard Taskflow](./docs/dashboard-taskflow.png)
+```
+
+### Como executar
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+

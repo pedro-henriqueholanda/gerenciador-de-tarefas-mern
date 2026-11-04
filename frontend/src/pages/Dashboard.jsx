@@ -1,131 +1,95 @@
-import { useEffect, useState } from "react";
-import api from "../services/api";
-import TaskModal from "../components/TaskModal";
+import { useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import TaskHeader from "../components/TaskHeader";
+import TaskSidebar from "../components/TaskSidebar";
+import TaskCard from "../components/TaskCard";
+import StatCard from "../components/StatCard";
+import TaskFormModal from "../components/TaskFormModal";
+import { tarefasIniciais } from "../data/tasks";
 
 export default function Dashboard() {
-  const [tarefas, setTarefas] = useState([]);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState("");
-  const [modalAberto, setModalAberto] = useState(false);
-  const [tarefaEditando, setTarefaEditando] = useState(null); // null = criando nova
   const { logout } = useAuth();
+  const [tarefas, setTarefas] = useState(tarefasIniciais);
+  const [filtro, setFiltro] = useState("todas");
+  const [busca, setBusca] = useState("");
+  const [modalAberto, setModalAberto] = useState(false);
 
-  useEffect(() => {
-    carregarTarefas();
-  }, []);
+  const concluidas = tarefas.filter((tarefa) => tarefa.status === "concluida").length;
+  const pendentes = tarefas.length - concluidas;
+  const atrasadas = tarefas.filter((tarefa) => tarefa.atrasada && tarefa.status !== "concluida").length;
 
-  async function carregarTarefas() {
-    setCarregando(true);
-    try {
-      const res = await api.get("/tasks");
-      setTarefas(res.data);
-    } catch (err) {
-      setErro("Erro ao carregar tarefas");
-    } finally {
-      setCarregando(false);
-    }
-  }
+  const tarefasFiltradas = useMemo(() => tarefas.filter((tarefa) => {
+    const correspondeBusca = `${tarefa.titulo} ${tarefa.descricao} ${tarefa.responsavel}`
+      .toLocaleLowerCase("pt-BR").includes(busca.toLocaleLowerCase("pt-BR"));
+    const correspondeFiltro = filtro === "todas" ||
+      (filtro === "pendentes" && tarefa.status === "pendente") ||
+      (filtro === "concluidas" && tarefa.status === "concluida") ||
+      (filtro === "atrasadas" && tarefa.atrasada && tarefa.status !== "concluida");
+    return correspondeBusca && correspondeFiltro;
+  }), [tarefas, filtro, busca]);
 
-  function abrirModalNovaTarefa() {
-    setTarefaEditando(null);
-    setModalAberto(true);
-  }
-
-  function abrirModalEdicao(tarefa) {
-    setTarefaEditando(tarefa);
-    setModalAberto(true);
-  }
-
-  function fecharModal() {
+  function adicionarTarefa(novaTarefa) {
+    setTarefas((atuais) => [{ ...novaTarefa, id: crypto.randomUUID() }, ...atuais]);
     setModalAberto(false);
-    setTarefaEditando(null);
   }
 
-  async function handleSalvar(dadosTarefa) {
-    try {
-      if (tarefaEditando) {
-        // EDITAR (PUT)
-        const res = await api.put(`/tasks/${tarefaEditando._id}`, dadosTarefa);
-        setTarefas((prev) =>
-          prev.map((t) => (t._id === tarefaEditando._id ? res.data : t))
-        );
-      } else {
-        // CRIAR (POST)
-        const res = await api.post("/tasks", dadosTarefa);
-        setTarefas((prev) => [...prev, res.data]);
-      }
-      fecharModal();
-    } catch (err) {
-      setErro("Erro ao salvar tarefa");
-    }
+  function alternarStatus(id) {
+    setTarefas((atuais) => atuais.map((tarefa) =>
+      tarefa.id === id ? { ...tarefa, status: tarefa.status === "concluida" ? "pendente" : "concluida" } : tarefa
+    ));
   }
 
-  async function handleExcluir(id) {
-    const confirmar = window.confirm("Tem certeza que deseja excluir esta tarefa?");
-    if (!confirmar) return;
-
-    try {
-      await api.delete(`/tasks/${id}`);
-      setTarefas((prev) => prev.filter((t) => t._id !== id));
-    } catch (err) {
-      setErro("Erro ao excluir tarefa");
-    }
-  }
-
-  async function alternarStatus(tarefa) {
-    const novoStatus = tarefa.status === "pendente" ? "concluída" : "pendente";
-    try {
-      const res = await api.put(`/tasks/${tarefa._id}`, { ...tarefa, status: novoStatus });
-      setTarefas((prev) => prev.map((t) => (t._id === tarefa._id ? res.data : t)));
-    } catch (err) {
-      setErro("Erro ao atualizar status");
-    }
+  function excluirTarefa(id) {
+    setTarefas((atuais) => atuais.filter((tarefa) => tarefa.id !== id));
   }
 
   return (
-    <div>
-      <header style={{ display: "flex", justifyContent: "space-between" }}>
-        <h2>Minhas Tarefas</h2>
-        <button onClick={logout}>Sair</button>
-      </header>
+    <div className="app-shell">
+      <TaskSidebar filtro={filtro} onFiltrar={setFiltro} pendentes={pendentes} />
+      <main className="main-content">
+        <TaskHeader busca={busca} onBuscar={setBusca} onNovaTarefa={() => setModalAberto(true)} onSair={logout} />
+        <section className="welcome-section">
+          <div>
+            <p className="eyebrow">QUARTA-FEIRA, 04 DE NOVEMBRO</p>
+            <h1>Organize suas ideias. <span>Faça acontecer.</span></h1>
+            <p className="welcome-copy">Acompanhe suas prioridades e mantenha o ritmo do seu dia.</p>
+          </div>
+          <div className="welcome-mark" aria-hidden="true">✦</div>
+        </section>
 
-      {erro && <p style={{ color: "red" }}>{erro}</p>}
+        <section className="stats-grid" aria-label="Resumo das tarefas">
+          <StatCard label="Total de tarefas" value={tarefas.length} detail="No seu espaço de trabalho" icon="▤" tone="purple" />
+          <StatCard label="Em andamento" value={pendentes} detail="Precisam da sua atenção" icon="◷" tone="orange" />
+          <StatCard label="Concluídas" value={concluidas} detail={tarefas.length ? `${Math.round((concluidas / tarefas.length) * 100)}% do total` : "Nenhuma tarefa ainda"} icon="✓" tone="green" />
+          <StatCard label="Atrasadas" value={atrasadas} detail="Verifique os prazos" icon="!" tone="red" />
+        </section>
 
-      <button onClick={abrirModalNovaTarefa}>+ Nova Tarefa</button>
-
-      {carregando ? (
-        <p>Carregando...</p>
-      ) : tarefas.length === 0 ? (
-        <p>Nenhuma tarefa cadastrada ainda.</p>
-      ) : (
-        <div style={{ marginTop: 16 }}>
-          {tarefas.map((tarefa) => (
-            <div
-              key={tarefa._id}
-              className={`task-card ${tarefa.status === "concluída" ? "concluida" : ""}`}
-            >
-              <div onClick={() => alternarStatus(tarefa)} style={{ cursor: "pointer", flex: 1 }}>
-                <strong>{tarefa.title}</strong>
-                <p>{tarefa.description}</p>
-                <small>{tarefa.status}</small>
-              </div>
-              <div>
-                <button onClick={() => abrirModalEdicao(tarefa)}>Editar</button>
-                <button onClick={() => handleExcluir(tarefa._id)}>Excluir</button>
-              </div>
+        <section className="tasks-section">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">SEU FLUXO DE TRABALHO</p>
+              <h2>{filtro === "todas" ? "Todas as tarefas" : filtro === "pendentes" ? "Tarefas pendentes" : filtro === "concluidas" ? "Tarefas concluídas" : "Tarefas atrasadas"}</h2>
             </div>
-          ))}
-        </div>
-      )}
-
-      {modalAberto && (
-        <TaskModal
-          tarefa={tarefaEditando}
-          onSalvar={handleSalvar}
-          onFechar={fecharModal}
-        />
-      )}
+            <span className="task-count">{tarefasFiltradas.length} {tarefasFiltradas.length === 1 ? "tarefa" : "tarefas"}</span>
+          </div>
+          {tarefasFiltradas.length ? (
+            <div className="task-list">
+              {tarefasFiltradas.map((tarefa) => (
+                <TaskCard key={tarefa.id} tarefa={tarefa} onAlternar={alternarStatus} onExcluir={excluirTarefa} />
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state">
+              <span>✧</span>
+              <h3>Nenhuma tarefa encontrada</h3>
+              <p>Tente alterar o filtro ou a busca, ou crie uma nova tarefa.</p>
+              <button className="button button-primary" onClick={() => setModalAberto(true)}>Criar tarefa</button>
+            </div>
+          )}
+        </section>
+        <footer className="page-footer">Feito para manter suas tarefas em movimento <span>✦</span></footer>
+      </main>
+      {modalAberto && <TaskFormModal onFechar={() => setModalAberto(false)} onSalvar={adicionarTarefa} />}
     </div>
   );
 }
