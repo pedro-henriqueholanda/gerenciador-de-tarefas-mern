@@ -648,3 +648,8 @@ npm install
 npm run dev
 ```
 
+
+
+### Documento de planejamento
+
+O esboço da interface, a árvore de componentes, as responsabilidades, os critérios de UX/acessibilidade, o modelo dos mocks e os prompts de referência estão documentados em [frontend/docs/arquitetura-frontend.md](./frontend/docs/arquitetura-frontend.md). A captura de tela indicada acima ainda deve ser gerada no Codespace após a validação visual da aplicação.
