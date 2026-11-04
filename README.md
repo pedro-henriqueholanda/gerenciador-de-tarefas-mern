@@ -637,7 +637,7 @@ Os prompts acima documentam os prompts de referência usados para orientar a imp
 Após iniciar o frontend, registre uma captura da interface e adicione-a aqui:
 
 ```md
-![Dashboard Taskflow](./docs/dashboard-taskflow.png)
+![Dashboard Taskflow](./frontend/docs/dashboard-taskflow.png)
 ```
 
 ### Como executar
