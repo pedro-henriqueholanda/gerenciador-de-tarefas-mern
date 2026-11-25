@@ -1,24 +1,141 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import TaskHeader from "../components/TaskHeader";
-import TaskSidebar from "../components/TaskSidebar";
-import TaskCard from "../components/TaskCard";
+import Header from "../components/Header";
+import Sidebar from "../components/Sidebar";
 import StatCard from "../components/StatCard";
-import TaskFormModal from "../components/TaskFormModal";
-import { tarefasIniciais } from "../data/tasks";
+import TransactionCard from "../components/TransactionCard";
+import TransactionFormModal from "../components/TransactionFormModal";
+import {
+  atualizar,
+  criar,
+  excluir,
+  listar,
+  modoDemonstracao,
+} from "../services/transactionService";
+import { formatarMoeda, mensagemDeErro } from "../utils/format";
+
+const TITULOS = {
+  todas: "Todas as transações",
+  entradas: "Entradas",
+  saidas: "Saídas",
+};
+
+const TIPO_DO_FILTRO = { entradas: "entrada", saidas: "saida" };
+
+function ordenarPorData(lista) {
+  return [...lista].sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+function lancamentos(quantidade) {
+  return `${quantidade} ${quantidade === 1 ? "lançamento" : "lançamentos"}`;
+}
 
 export default function Dashboard() {
   const { logout } = useAuth();
-  const [tarefas, setTarefas] = useState(tarefasIniciais);
+  const [transacoes, setTransacoes] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erroLista, setErroLista] = useState("");
+  const [tentativa, setTentativa] = useState(0);
+  const [erroAcao, setErroAcao] = useState("");
   const [filtro, setFiltro] = useState("todas");
   const [busca, setBusca] = useState("");
-  const [modalAberto, setModalAberto] = useState(false);
+  // modal: null = fechado | { transacao: null } = nova | { transacao } = edição
+  const [modal, setModal] = useState(null);
 
-  const concluidas = tarefas.filter((tarefa) => tarefa.status === "concluida").length;
-  const pendentes = tarefas.length - concluidas;
-  const atrasadas = tarefas.filter(
-    (tarefa) => tarefa.atrasada && tarefa.status !== "concluida",
-  ).length;
+  // "carregando" já nasce true; o efeito só atualiza estado quando a API responde.
+  // O sinal "cancelado" evita atualizar o estado se a tela for fechada no meio da busca.
+  useEffect(() => {
+    let cancelado = false;
+
+    listar()
+      .then((lista) => {
+        if (!cancelado) setTransacoes(ordenarPorData(lista));
+      })
+      .catch((err) => {
+        if (!cancelado) {
+          setErroLista(mensagemDeErro(err, "Não foi possível carregar as transações."));
+        }
+      })
+      .finally(() => {
+        if (!cancelado) setCarregando(false);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [tentativa]);
+
+  function tentarNovamente() {
+    setCarregando(true);
+    setErroLista("");
+    setTentativa((n) => n + 1);
+  }
+
+  // Soma em centavos para evitar erros de ponto flutuante (0,1 + 0,2).
+  const totais = useMemo(() => {
+    let entradas = 0;
+    let saidas = 0;
+    for (const transacao of transacoes) {
+      const centavos = Math.round(transacao.value * 100);
+      if (transacao.type === "entrada") entradas += centavos;
+      else saidas += centavos;
+    }
+    return {
+      entradas: entradas / 100,
+      saidas: saidas / 100,
+      saldo: (entradas - saidas) / 100,
+    };
+  }, [transacoes]);
+
+  const contagens = useMemo(() => {
+    const entradas = transacoes.filter((t) => t.type === "entrada").length;
+    return {
+      todas: transacoes.length,
+      entradas,
+      saidas: transacoes.length - entradas,
+    };
+  }, [transacoes]);
+
+  const transacoesFiltradas = useMemo(() => {
+    const termo = busca.toLocaleLowerCase("pt-BR");
+    return transacoes.filter((transacao) => {
+      const correspondeTipo =
+        filtro === "todas" || transacao.type === TIPO_DO_FILTRO[filtro];
+      const texto = `${transacao.category} ${transacao.description ?? ""}`;
+      const correspondeBusca = texto.toLocaleLowerCase("pt-BR").includes(termo);
+      return correspondeTipo && correspondeBusca;
+    });
+  }, [transacoes, filtro, busca]);
+
+  // Lança erro em caso de falha: o modal captura, mostra a mensagem e continua aberto.
+  async function salvarTransacao(dados) {
+    if (modal.transacao) {
+      const atualizada = await atualizar(modal.transacao._id, dados);
+      setTransacoes((atuais) =>
+        ordenarPorData(atuais.map((t) => (t._id === atualizada._id ? atualizada : t))),
+      );
+    } else {
+      const nova = await criar(dados);
+      setTransacoes((atuais) => ordenarPorData([nova, ...atuais]));
+    }
+    setErroAcao("");
+    setModal(null);
+  }
+
+  async function excluirTransacao(transacao) {
+    const confirmado = window.confirm(
+      `Excluir "${transacao.category}" de ${formatarMoeda(transacao.value)}?`,
+    );
+    if (!confirmado) return;
+
+    try {
+      await excluir(transacao._id);
+      setTransacoes((atuais) => atuais.filter((t) => t._id !== transacao._id));
+      setErroAcao("");
+    } catch (err) {
+      setErroAcao(mensagemDeErro(err, "Não foi possível excluir a transação."));
+    }
+  }
 
   const dataAtual = new Date();
   const dataFormatada = dataAtual.toLocaleDateString("pt-BR", {
@@ -32,67 +149,17 @@ export default function Dashboard() {
     String(dataAtual.getDate()).padStart(2, "0"),
   ].join("-");
 
-  const tarefasFiltradas = useMemo(
-    () =>
-      tarefas.filter((tarefa) => {
-        const textoBusca = `${tarefa.titulo} ${tarefa.descricao} ${tarefa.responsavel}`;
-        const correspondeBusca = textoBusca
-          .toLocaleLowerCase("pt-BR")
-          .includes(busca.toLocaleLowerCase("pt-BR"));
-
-        const correspondeFiltro =
-          filtro === "todas" ||
-          (filtro === "pendentes" && tarefa.status === "pendente") ||
-          (filtro === "concluidas" && tarefa.status === "concluida") ||
-          (filtro === "atrasadas" &&
-            tarefa.atrasada &&
-            tarefa.status !== "concluida");
-
-        return correspondeBusca && correspondeFiltro;
-      }),
-    [tarefas, filtro, busca],
-  );
-
-  function adicionarTarefa(novaTarefa) {
-    setTarefas((atuais) => [
-      { ...novaTarefa, id: crypto.randomUUID() },
-      ...atuais,
-    ]);
-    setModalAberto(false);
-  }
-
-  function alternarStatus(id) {
-    setTarefas((atuais) =>
-      atuais.map((tarefa) =>
-        tarefa.id === id
-          ? {
-              ...tarefa,
-              status:
-                tarefa.status === "concluida" ? "pendente" : "concluida",
-            }
-          : tarefa,
-      ),
-    );
-  }
-
-  function excluirTarefa(id) {
-    setTarefas((atuais) => atuais.filter((tarefa) => tarefa.id !== id));
-  }
-
   return (
     <div className="app-shell">
-      <TaskSidebar
-        filtro={filtro}
-        onFiltrar={setFiltro}
-        pendentes={pendentes}
-      />
+      <Sidebar filtro={filtro} onFiltrar={setFiltro} contagens={contagens} />
 
       <main className="main-content">
-        <TaskHeader
+        <Header
           busca={busca}
           onBuscar={setBusca}
-          onNovaTarefa={() => setModalAberto(true)}
+          onNovaTransacao={() => setModal({ transacao: null })}
           onSair={logout}
+          modoDemonstracao={modoDemonstracao}
         />
 
         <section className="welcome-section" aria-labelledby="welcome-title">
@@ -101,10 +168,10 @@ export default function Dashboard() {
               <time dateTime={dataIso}>{dataFormatada}</time>
             </p>
             <h1 id="welcome-title">
-              Organize suas ideias. <span>Faça acontecer.</span>
+              Suas finanças, <span>sob controle.</span>
             </h1>
             <p className="welcome-copy">
-              Acompanhe suas prioridades e mantenha o ritmo do seu dia.
+              Acompanhe entradas e saídas e mantenha o saldo no azul.
             </p>
           </div>
           <div className="welcome-mark" aria-hidden="true">
@@ -112,99 +179,117 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <section className="stats-grid" aria-label="Resumo das tarefas">
+        <section className="stats-grid" aria-label="Resumo financeiro">
           <StatCard
-            label="Total de tarefas"
-            value={tarefas.length}
-            detail="No seu espaço de trabalho"
-            icon="▤"
+            label="Saldo atual"
+            value={formatarMoeda(totais.saldo)}
+            detail="Entradas menos saídas"
+            icon="◈"
             tone="purple"
           />
           <StatCard
-            label="Em andamento"
-            value={pendentes}
-            detail="Precisam da sua atenção"
-            icon="◷"
-            tone="orange"
-          />
-          <StatCard
-            label="Concluídas"
-            value={concluidas}
-            detail={
-              tarefas.length
-                ? `${Math.round((concluidas / tarefas.length) * 100)}% do total`
-                : "Nenhuma tarefa ainda"
-            }
-            icon="✓"
+            label="Entradas"
+            value={formatarMoeda(totais.entradas)}
+            detail={lancamentos(contagens.entradas)}
+            icon="↙"
             tone="green"
           />
           <StatCard
-            label="Atrasadas"
-            value={atrasadas}
-            detail="Verifique os prazos"
-            icon="!"
+            label="Saídas"
+            value={formatarMoeda(totais.saidas)}
+            detail={lancamentos(contagens.saidas)}
+            icon="↗"
             tone="red"
+          />
+          <StatCard
+            label="Transações"
+            value={contagens.todas}
+            detail="Registradas na sua conta"
+            icon="▤"
+            tone="orange"
           />
         </section>
 
         <section className="tasks-section" aria-labelledby="tasks-title">
           <div className="section-heading">
             <div>
-              <p className="eyebrow">SEU FLUXO DE TRABALHO</p>
-              <h2 id="tasks-title">
-                {filtro === "todas"
-                  ? "Todas as tarefas"
-                  : filtro === "pendentes"
-                    ? "Tarefas pendentes"
-                    : filtro === "concluidas"
-                      ? "Tarefas concluídas"
-                      : "Tarefas atrasadas"}
-              </h2>
+              <p className="eyebrow">SEU FLUXO DE CAIXA</p>
+              <h2 id="tasks-title">{TITULOS[filtro]}</h2>
             </div>
             <span className="task-count" aria-live="polite">
-              {tarefasFiltradas.length}{" "}
-              {tarefasFiltradas.length === 1 ? "tarefa" : "tarefas"}
+              {transacoesFiltradas.length}{" "}
+              {transacoesFiltradas.length === 1 ? "transação" : "transações"}
             </span>
           </div>
 
-          {tarefasFiltradas.length > 0 ? (
+          {erroAcao && (
+            <div className="alert-banner" role="alert">
+              <span>{erroAcao}</span>
+              <button
+                type="button"
+                onClick={() => setErroAcao("")}
+                aria-label="Dispensar aviso"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
+          {carregando ? (
+            <div className="empty-state" role="status">
+              <span aria-hidden="true">◷</span>
+              <h3>Carregando transações...</h3>
+            </div>
+          ) : erroLista ? (
+            <div className="empty-state" role="alert">
+              <span aria-hidden="true">!</span>
+              <h3>Não foi possível carregar</h3>
+              <p>{erroLista}</p>
+              <button type="button" className="button button-primary" onClick={tentarNovamente}>
+                Tentar novamente
+              </button>
+            </div>
+          ) : transacoesFiltradas.length > 0 ? (
             <div className="task-list">
-              {tarefasFiltradas.map((tarefa) => (
-                <TaskCard
-                  key={tarefa.id}
-                  tarefa={tarefa}
-                  onAlternar={alternarStatus}
-                  onExcluir={excluirTarefa}
+              {transacoesFiltradas.map((transacao) => (
+                <TransactionCard
+                  key={transacao._id}
+                  transacao={transacao}
+                  onEditar={(t) => setModal({ transacao: t })}
+                  onExcluir={excluirTransacao}
                 />
               ))}
             </div>
           ) : (
             <div className="empty-state" role="status">
               <span aria-hidden="true">✧</span>
-              <h3>Nenhuma tarefa encontrada</h3>
+              <h3>Nenhuma transação encontrada</h3>
               <p>
-                Tente alterar o filtro ou a busca, ou crie uma nova tarefa.
+                {contagens.todas === 0
+                  ? "Registre sua primeira entrada ou saída."
+                  : "Tente alterar o filtro ou a busca, ou registre uma nova transação."}
               </p>
               <button
                 type="button"
                 className="button button-primary"
-                onClick={() => setModalAberto(true)}
+                onClick={() => setModal({ transacao: null })}
               >
-                Criar tarefa
+                Nova transação
               </button>
             </div>
           )}
         </section>
 
         <footer className="page-footer">
-          Feito para manter suas tarefas em movimento <span>✦</span>
+          Feito para manter suas finanças em dia <span>✦</span>
         </footer>
       </main>
 
-      {modalAberto && (
-        <TaskFormModal
-          onFechar={() => setModalAberto(false)}
-          onSalvar={adicionarTarefa}
+      {modal && (
+        <TransactionFormModal
+          transacao={modal.transacao}
+          onFechar={() => setModal(null)}
+          onSalvar={salvarTransacao}
         />
       )}
     </div>
