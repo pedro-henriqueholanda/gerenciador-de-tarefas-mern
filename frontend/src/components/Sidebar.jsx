@@ -1,30 +1,29 @@
 const filtros = [
-  { id: "todas", label: "Todas as tarefas", icon: "▦" },
-  { id: "pendentes", label: "Pendentes", icon: "◷" },
-  { id: "concluidas", label: "Concluídas", icon: "✓" },
-  { id: "atrasadas", label: "Atrasadas", icon: "⌛" },
+  { id: "todas", label: "Todas as transações", icon: "▦" },
+  { id: "entradas", label: "Entradas", icon: "↙" },
+  { id: "saidas", label: "Saídas", icon: "↗" },
 ];
 
-export default function TaskSidebar({ filtro, onFiltrar, pendentes }) {
+export default function Sidebar({ filtro, onFiltrar, contagens }) {
   return (
-    <aside className="sidebar" aria-label="Navegação do Taskflow">
-      <a className="brand" href="/dashboard" aria-label="Taskflow - início">
+    <aside className="sidebar" aria-label="Navegação do Finflow">
+      <a className="brand" href="/dashboard" aria-label="Finflow - início">
         <span className="brand-icon" aria-hidden="true">✳</span>
-        <span>task<span>flow</span></span>
+        <span>fin<span>flow</span></span>
       </a>
 
       <div className="workspace-label">ESPAÇO DE TRABALHO</div>
       <div className="workspace-switch">
         <span className="workspace-avatar" aria-hidden="true">P</span>
         <span>
-          <strong>Meu espaço</strong>
+          <strong>Minhas finanças</strong>
           <small>Pessoal</small>
         </span>
         <span className="switch-chevron" aria-hidden="true">⌄</span>
       </div>
 
       <div className="nav-label">MENU PRINCIPAL</div>
-      <nav className="side-nav" aria-label="Filtros de tarefas">
+      <nav className="side-nav" aria-label="Filtros de transações">
         {filtros.map((item) => (
           <button
             type="button"
@@ -35,9 +34,7 @@ export default function TaskSidebar({ filtro, onFiltrar, pendentes }) {
           >
             <span className="nav-icon" aria-hidden="true">{item.icon}</span>
             <span>{item.label}</span>
-            {item.id === "pendentes" && (
-              <small className="nav-count">{pendentes}</small>
-            )}
+            <small className="nav-count">{contagens[item.id]}</small>
           </button>
         ))}
       </nav>
@@ -45,11 +42,11 @@ export default function TaskSidebar({ filtro, onFiltrar, pendentes }) {
       <div className="sidebar-bottom">
         <div className="focus-card">
           <span className="focus-spark" aria-hidden="true">✦</span>
-          <strong>Um passo de cada vez.</strong>
-          <p>Pequenas entregas constroem grandes resultados.</p>
+          <strong>Cada real conta.</strong>
+          <p>Registrar entradas e saídas é o primeiro passo para decidir melhor.</p>
         </div>
         <div className="sidebar-version">
-          TASKFLOW <span>•</span> V1.0
+          FINFLOW <span>•</span> V1.0
         </div>
       </div>
     </aside>

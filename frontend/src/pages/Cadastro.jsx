@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import api from "../services/api";
+import { cadastrar } from "../services/authService";
+import { mensagemDeErro } from "../utils/format";
 
 export default function Cadastro() {
   const [name, setName] = useState("");
@@ -27,12 +28,11 @@ export default function Cadastro() {
 
     setCarregando(true);
     try {
-      await api.post("/auth/register", { name, email, password });
+      await cadastrar({ name, email, password });
       // após cadastrar, redireciona para login
       navigate("/login");
     } catch (err) {
-      const msg = err.response?.data?.message || "Erro ao cadastrar. Tente novamente.";
-      setErro(msg);
+      setErro(mensagemDeErro(err, "Erro ao cadastrar. Tente novamente."));
     } finally {
       setCarregando(false);
     }
