@@ -27,7 +27,7 @@ export default function Cadastro() {
 
     setCarregando(true);
     try {
-      await api.post("/auth/registro", { name, email, password });
+      await api.post("/auth/register", { name, email, password });
       // após cadastrar, redireciona para login
       navigate("/login");
     } catch (err) {

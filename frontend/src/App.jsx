@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import "./App.css";
 import { AuthProvider } from "./context/AuthContext";
 import RotaProtegida from "./components/RotaProtegida";
 import Login from "./pages/Login";

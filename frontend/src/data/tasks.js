@@ -1,0 +1,9 @@
+export const tarefasIniciais = [
+  { id: "task-01", titulo: "Finalizar protótipo do dashboard", descricao: "Revisar os componentes e validar a hierarquia visual das telas.", responsavel: "Pedro Henrique", categoria: "Trabalho", prazo: "Hoje, 16:00", status: "pendente", atrasada: false },
+  { id: "task-02", titulo: "Estudar componentização em React", descricao: "Praticar props, composição e renderização de listas com map().", responsavel: "Pedro Henrique", categoria: "Estudos", prazo: "Hoje, 18:30", status: "pendente", atrasada: false },
+  { id: "task-03", titulo: "Revisar documentação da API", descricao: "Conferir endpoints, exemplos de requisição e respostas esperadas.", responsavel: "Ana Clara", categoria: "Trabalho", prazo: "05 nov, 10:00", status: "pendente", atrasada: false },
+  { id: "task-04", titulo: "Enviar relatório semanal", descricao: "Consolidar as entregas e compartilhar o resumo com a equipe.", responsavel: "Pedro Henrique", categoria: "Planejamento", prazo: "03 nov, 17:00", status: "pendente", atrasada: true },
+  { id: "task-05", titulo: "Organizar referências do projeto", descricao: "Separar links, materiais de apoio e referências visuais.", responsavel: "Mariana Costa", categoria: "Pessoal", prazo: "02 nov, 12:00", status: "concluida", atrasada: false },
+  { id: "task-06", titulo: "Configurar ambiente de desenvolvimento", descricao: "Verificar dependências, scripts e configuração do Vite.", responsavel: "Pedro Henrique", categoria: "Trabalho", prazo: "01 nov, 15:00", status: "concluida", atrasada: false },
+  { id: "task-07", titulo: "Planejar atividades da próxima sprint", descricao: "Definir prioridades e dividir as próximas entregas.", responsavel: "Ana Clara", categoria: "Planejamento", prazo: "06 nov, 09:00", status: "pendente", atrasada: false },
+];

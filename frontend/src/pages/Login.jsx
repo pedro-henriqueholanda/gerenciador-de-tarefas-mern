@@ -28,6 +28,9 @@ export default function Login() {
       <input type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} required />
       <input type="password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} required />
       <button type="submit">Entrar</button>
+      <p>
+        Ainda não tem uma conta? <a href="/cadastro">Criar conta</a>
+      </p>
     </form>
   );
 }
