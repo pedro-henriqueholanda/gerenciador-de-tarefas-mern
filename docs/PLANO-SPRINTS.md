@@ -42,11 +42,11 @@ contra a API real.
 
 ## Sprint 2 — Telas, validação e acabamento (28/11 a 30/11)
 
-- [ ] Login e Cadastro no mesmo visual do dashboard
-- [ ] Validação dos formulários alinhada aos limites do backend
-- [ ] Estados de carregamento, erro e vazio em todas as telas
-- [ ] Confirmação de exclusão própria (no lugar de `window.confirm`)
-- [ ] Responsividade e acessibilidade (foco, rótulos, contraste)
+- [x] Login e Cadastro no mesmo visual do dashboard
+- [x] Validação dos formulários alinhada aos limites do backend
+- [x] Estados de carregamento, erro e vazio em todas as telas
+- [x] Confirmação de exclusão própria (no lugar de `window.confirm`)
+- [x] Responsividade (celular e tablet) e acessibilidade (foco, rótulos, `aria-invalid`, Esc nos diálogos); contraste ainda sem auditoria formal
 - [ ] Ajustes encontrados no teste ponta a ponta com o backend real
 
 ## Sprint 3 — Documentação e entrega (01/12)

@@ -42,3 +42,25 @@ export function mensagemDeErro(err, padrao = "Algo deu errado. Tente novamente."
 
   return message || padrao;
 }
+
+export const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+// Validações dos formulários de autenticação: retornam { campo: "mensagem" }.
+export function validarLogin({ email, password }) {
+  const erros = {};
+  if (!email.trim()) erros.email = "Informe seu e-mail.";
+  else if (!EMAIL_VALIDO.test(email.trim())) erros.email = "Digite um e-mail válido.";
+  if (!password) erros.password = "Informe sua senha.";
+  return erros;
+}
+
+export function validarCadastro({ name, email, password, confirmarSenha }) {
+  const erros = {};
+  if (name.trim().length < 2) erros.name = "Informe seu nome (mínimo 2 letras).";
+  if (!email.trim()) erros.email = "Informe seu e-mail.";
+  else if (!EMAIL_VALIDO.test(email.trim())) erros.email = "Digite um e-mail válido.";
+  if (password.length < 6) erros.password = "A senha deve ter pelo menos 6 caracteres.";
+  if (!confirmarSenha) erros.confirmarSenha = "Repita a senha.";
+  else if (confirmarSenha !== password) erros.confirmarSenha = "As senhas não coincidem.";
+  return erros;
+}

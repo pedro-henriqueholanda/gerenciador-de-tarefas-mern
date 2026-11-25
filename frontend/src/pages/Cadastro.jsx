@@ -1,86 +1,96 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import AuthLayout from "../components/AuthLayout";
+import FormField from "../components/FormField";
+import { useAuth } from "../context/AuthContext";
 import { cadastrar } from "../services/authService";
-import { mensagemDeErro } from "../utils/format";
+import { mensagemDeErro, validarCadastro } from "../utils/format";
 
 export default function Cadastro() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [errosCampos, setErrosCampos] = useState({});
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
+  const { token } = useAuth();
   const navigate = useNavigate();
+
+  if (token) return <Navigate to="/dashboard" replace />;
 
   async function handleSubmit(e) {
     e.preventDefault();
     setErro("");
-
-    if (password !== confirmarSenha) {
-      setErro("As senhas não coincidem");
-      return;
-    }
-
-    if (password.length < 6) {
-      setErro("A senha deve ter pelo menos 6 caracteres");
-      return;
-    }
+    const erros = validarCadastro({ name, email, password, confirmarSenha });
+    setErrosCampos(erros);
+    if (Object.keys(erros).length > 0) return;
 
     setCarregando(true);
     try {
-      await cadastrar({ name, email, password });
-      // após cadastrar, redireciona para login
-      navigate("/login");
+      await cadastrar({ name: name.trim(), email: email.trim(), password });
+      navigate("/login", { state: { cadastrado: true } });
     } catch (err) {
       setErro(mensagemDeErro(err, "Erro ao cadastrar. Tente novamente."));
-    } finally {
       setCarregando(false);
     }
   }
 
   return (
-    <div className="auth-container">
-      <form onSubmit={handleSubmit}>
-        <h2>Criar Conta</h2>
-        {erro && <p style={{ color: "red" }}>{erro}</p>}
-
-        <input
-          type="text"
-          placeholder="Nome"
+    <AuthLayout
+      titulo="Crie sua conta"
+      subtitulo="Leva menos de um minuto para começar a organizar suas finanças."
+      rodape={
+        <>
+          Já tem uma conta? <Link to="/login">Fazer login</Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} noValidate className="auth-form">
+        {erro && (
+          <p className="form-error" role="alert">
+            {erro}
+          </p>
+        )}
+        <FormField
+          label="Nome"
+          placeholder="Como devemos te chamar?"
+          autoComplete="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          required
+          erro={errosCampos.name}
         />
-        <input
+        <FormField
+          label="E-mail"
           type="email"
-          placeholder="E-mail"
+          placeholder="voce@email.com"
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required
+          erro={errosCampos.email}
         />
-        <input
+        <FormField
+          label="Senha"
           type="password"
-          placeholder="Senha"
+          placeholder="Mínimo de 6 caracteres"
+          autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          required
+          erro={errosCampos.password}
         />
-        <input
+        <FormField
+          label="Confirmar senha"
           type="password"
-          placeholder="Confirmar senha"
+          placeholder="Repita a senha"
+          autoComplete="new-password"
           value={confirmarSenha}
           onChange={(e) => setConfirmarSenha(e.target.value)}
-          required
+          erro={errosCampos.confirmarSenha}
         />
-
-        <button type="submit" disabled={carregando}>
-          {carregando ? "Cadastrando..." : "Cadastrar"}
+        <button type="submit" className="button button-primary auth-submit" disabled={carregando}>
+          {carregando ? "Cadastrando..." : "Criar conta"}
         </button>
-
-        <p>
-          Já tem uma conta? <Link to="/login">Fazer login</Link>
-        </p>
       </form>
-    </div>
+    </AuthLayout>
   );
 }

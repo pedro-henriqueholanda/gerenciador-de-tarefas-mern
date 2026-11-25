@@ -4,6 +4,8 @@ import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import StatCard from "../components/StatCard";
 import TransactionCard from "../components/TransactionCard";
+import ConfirmDialog from "../components/ConfirmDialog";
+import SkeletonList from "../components/SkeletonList";
 import TransactionFormModal from "../components/TransactionFormModal";
 import {
   atualizar,
@@ -37,6 +39,8 @@ export default function Dashboard() {
   const [erroLista, setErroLista] = useState("");
   const [tentativa, setTentativa] = useState(0);
   const [erroAcao, setErroAcao] = useState("");
+  const [paraExcluir, setParaExcluir] = useState(null);
+  const [excluindo, setExcluindo] = useState(false);
   const [filtro, setFiltro] = useState("todas");
   const [busca, setBusca] = useState("");
   // modal: null = fechado | { transacao: null } = nova | { transacao } = edição
@@ -122,18 +126,18 @@ export default function Dashboard() {
     setModal(null);
   }
 
-  async function excluirTransacao(transacao) {
-    const confirmado = window.confirm(
-      `Excluir "${transacao.category}" de ${formatarMoeda(transacao.value)}?`,
-    );
-    if (!confirmado) return;
-
+  async function confirmarExclusao() {
+    const transacao = paraExcluir;
+    setExcluindo(true);
     try {
       await excluir(transacao._id);
       setTransacoes((atuais) => atuais.filter((t) => t._id !== transacao._id));
       setErroAcao("");
     } catch (err) {
       setErroAcao(mensagemDeErro(err, "Não foi possível excluir a transação."));
+    } finally {
+      setExcluindo(false);
+      setParaExcluir(null);
     }
   }
 
@@ -236,10 +240,7 @@ export default function Dashboard() {
           )}
 
           {carregando ? (
-            <div className="empty-state" role="status">
-              <span aria-hidden="true">◷</span>
-              <h3>Carregando transações...</h3>
-            </div>
+            <SkeletonList />
           ) : erroLista ? (
             <div className="empty-state" role="alert">
               <span aria-hidden="true">!</span>
@@ -256,7 +257,7 @@ export default function Dashboard() {
                   key={transacao._id}
                   transacao={transacao}
                   onEditar={(t) => setModal({ transacao: t })}
-                  onExcluir={excluirTransacao}
+                  onExcluir={setParaExcluir}
                 />
               ))}
             </div>
@@ -290,6 +291,18 @@ export default function Dashboard() {
           transacao={modal.transacao}
           onFechar={() => setModal(null)}
           onSalvar={salvarTransacao}
+        />
+      )}
+
+      {paraExcluir && (
+        <ConfirmDialog
+          titulo="Excluir transação?"
+          mensagem={`"${paraExcluir.category}" de ${formatarMoeda(paraExcluir.value)} será removida permanentemente.`}
+          textoConfirmar="Excluir"
+          perigo
+          ocupado={excluindo}
+          onConfirmar={confirmarExclusao}
+          onCancelar={() => setParaExcluir(null)}
         />
       )}
     </div>
