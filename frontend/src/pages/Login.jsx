@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../services/api";
+import { entrar } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
+import { mensagemDeErro } from "../utils/format";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -13,17 +14,16 @@ export default function Login() {
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      const res = await api.post("/auth/login", { email, password });
-      login(res.data.token);
+      login(await entrar(email, password));
       navigate("/dashboard");
     } catch (err) {
-      setErro("E-mail ou senha inválidos");
+      setErro(mensagemDeErro(err, "E-mail ou senha inválidos"));
     }
   }
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2 className="text-3xl font-bold text-green-600">Login</h2>
+      <h2>Login</h2>
       {erro && <p style={{ color: "red" }}>{erro}</p>}
       <input type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} required />
       <input type="password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} required />
