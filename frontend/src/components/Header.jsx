@@ -1,8 +1,9 @@
-export default function TaskHeader({
+export default function Header({
   busca,
   onBuscar,
-  onNovaTarefa,
+  onNovaTransacao,
   onSair,
+  modoDemonstracao,
 }) {
   return (
     <header className="topbar">
@@ -12,26 +13,32 @@ export default function TaskHeader({
           type="search"
           value={busca}
           onChange={(event) => onBuscar(event.target.value)}
-          placeholder="Buscar tarefas..."
-          aria-label="Buscar tarefas por título, descrição ou responsável"
+          placeholder="Buscar transações..."
+          aria-label="Buscar transações por categoria ou descrição"
         />
       </label>
 
       <div className="topbar-actions">
+        {modoDemonstracao && (
+          <span className="demo-badge" title="Dados simulados, sem conexão com a API">
+            MODO DEMONSTRAÇÃO
+          </span>
+        )}
+
         <button
           type="button"
           className="button button-primary"
-          onClick={onNovaTarefa}
+          onClick={onNovaTransacao}
         >
           <span aria-hidden="true">＋</span>
-          Nova tarefa
+          Nova transação
         </button>
 
         <div className="user-profile" aria-label="Usuário conectado">
-          <div className="avatar" aria-hidden="true">PH</div>
+          <div className="avatar" aria-hidden="true">EU</div>
           <div className="user-copy">
-            <strong>Pedro Henrique</strong>
-            <small>Administrador</small>
+            <strong>Minha conta</strong>
+            <small>Sessão ativa</small>
           </div>
         </div>
 
